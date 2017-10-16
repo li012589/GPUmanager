@@ -1,29 +1,11 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Aug  7 19:38:30 2017
-
-@author: Quantum Liu
-"""
-
-'''
-Example:
-gm=GPUManager()
-with gm.auto_choice():
-    blabla
-'''
-
 import os
 import tensorflow as tf
-#from tensorflow.python.client import device_lib
 
 def check_gpus():
     '''
     GPU available check
     reference : http://feisky.xyz/machine-learning/tensorflow/gpu_list.html
     '''
-# =============================================================================
-#     all_gpus = [x.name for x in device_lib.list_local_devices() if x.device_type == 'GPU']
-# =============================================================================
     first_gpus = os.popen('nvidia-smi --query-gpu=index --format=csv,noheader').readlines()[0].strip()
     if not first_gpus=='0':
         print('This script could only be used to manage NVIDIA GPUs,but no GPU found in your device')
@@ -35,58 +17,27 @@ def check_gpus():
 
 if check_gpus():
     def parse(line,qargs):
-        '''
-        line:
-            a line of text
-        qargs:
-            query arguments
-        return:
-            a dict of gpu infos
-        Pasing a line of csv format text returned by nvidia-smi
-        解析一行nvidia-smi返回的csv格式文本
-        '''
-        numberic_args = ['memory.free', 'memory.total', 'power.draw', 'power.limit']#可计数的参数
-        power_manage_enable=lambda v:(not 'Not Support' in v)#lambda表达式，显卡是否滋瓷power management（笔记本可能不滋瓷）
-        to_numberic=lambda v:float(v.upper().strip().replace('MIB','').replace('W',''))#带单位字符串去掉单位
+        numberic_args = ['memory.free', 'memory.total', 'power.draw', 'power.limit']
+        power_manage_enable=lambda v:(not 'Not Support' in v)
+        to_numberic=lambda v:float(v.upper().strip().replace('MIB','').replace('W',''))
         process = lambda k,v:((int(to_numberic(v)) if power_manage_enable(v) else 1) if k in numberic_args else v.strip())
         return {k:process(k,v) for k,v in zip(qargs,line.strip().split(','))}
-    
+
     def query_gpu(qargs=[]):
-        '''
-        qargs:
-            query arguments
-        return:
-            a list of dict
-        Querying GPUs infos
-        查询GPU信息
-        '''
         qargs =['index','gpu_name', 'memory.free', 'memory.total', 'power.draw', 'power.limit']+ qargs
         cmd = 'nvidia-smi --query-gpu={} --format=csv,noheader'.format(','.join(qargs))
         results = os.popen(cmd).readlines()
         return [parse(line,qargs) for line in results]
-    
+
     def by_power(d):
-        '''
-        helper function fo sorting gpus by power
-        '''
         power_infos=(d['power.draw'],d['power.limit'])
         if any(v==1 for v in power_infos):
             print('Power management unable for GPU {}'.format(d['index']))
             return 1
         return float(d['power.draw'])/d['power.limit']
-    
+
     class GPUManager():
-        '''
-        qargs:
-            query arguments
-        A manager which can list all available GPU devices
-        and sort them and choice the most free one.Unspecified 
-        ones pref.
-        GPU设备管理器，考虑列举出所有可用GPU设备，并加以排序，自动选出
-        最空闲的设备。在一个GPUManager对象内会记录每个GPU是否已被指定，
-        优先选择未指定的GPU。
-        '''
-        def __init__(self,qargs=[]):
+        def __init__(self,qargs=[],sessionargs=None,initSession=True):
             '''
             '''
             self.qargs=qargs
@@ -94,7 +45,18 @@ if check_gpus():
             for gpu in self.gpus:
                 gpu['specified']=False
             self.gpu_num=len(self.gpus)
-    
+            if initSession:
+                if sessionargs is None:
+                    print("Start session using default args")
+                    config = tf.ConfigProto()
+                else:
+                    print("Start session using provided args")
+                config.allow_soft_placement=True
+                config.gpu_options.allow_growth=True
+                self.sess = tf.Session(config=config)
+            else:
+                pass
+
         def _sort_by_memory(self,gpus,by_size=False):
             if by_size:
                 print('Sorted by free memory size')
@@ -102,10 +64,10 @@ if check_gpus():
             else:
                 print('Sorted by free memory rate')
                 return sorted(gpus,key=lambda d:float(d['memory.free'])/ d['memory.total'],reverse=True)
-    
+
         def _sort_by_power(self,gpus):
             return sorted(gpus,key=by_power)
-        
+
         def _sort_by_custom(self,gpus,key,reverse=False,qargs=[]):
             if isinstance(key,str) and (key in qargs):
                 return sorted(gpus,key=lambda d:d[key],reverse=reverse)
@@ -114,19 +76,9 @@ if check_gpus():
             raise ValueError("The argument 'key' must be a function or a key in query args,please read the documention of nvidia-smi")
 
         def auto_choice(self,mode=0):
-            '''
-            mode:
-                0:(default)sorted by free memory size
-            return:
-                a TF device object
-            Auto choice the freest GPU device,not specified
-            ones 
-            自动选择最空闲GPU
-            '''
             for old_infos,new_infos in zip(self.gpus,query_gpu(self.qargs)):
                 old_infos.update(new_infos)
             unspecified_gpus=[gpu for gpu in self.gpus if not gpu['specified']] or self.gpus
-            
             if mode==0:
                 print('Choosing the GPU device has largest free memory...')
                 chosen_gpu=self._sort_by_memory(unspecified_gpus,True)[0]
