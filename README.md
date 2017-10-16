@@ -30,7 +30,7 @@ It looks like this:
 import manager
 import tensorflow as tf
 ...
-gm = manager.GPUManger()
+gm = manager.GPUManager()
 sess = gm.sess
 ...
 with gm.auto_choice():
