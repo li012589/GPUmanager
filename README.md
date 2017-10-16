@@ -14,11 +14,36 @@ There 3 rules to select GPU (specified by calling `auto_choice(mode_code)`):
 1. According to free memory on card;
 2. According to power ratio.
 
-## How to 
+## How to   
 
-  gm=GPUManager()  
-  with gm.auto_choice():  
-    blabla
+### Briefly
+
+1. First copy *manager.py* to your work folder;
+2. import *manager.py* at your code;
+3. Initialize GPUManager using `gm = manager.GPUManager()`;
+4. Use `gm.sess` as your tensorflow session;
+5. Before your `sess.run` add `with gm.auto_choice():`;
+
+It looks like this:
+
+```python
+import manager
+import tensorflow as tf
+...
+gm = manager.GPUManger()
+sess = gm.sess
+...
+with gm.auto_choice():
+  sess.run(...)
+...
+```
+
+### In detail
+
+There are mainly two way to customize it
+
+1. ​
+
 ## Reference
 
 1. https://zhuanlan.zhihu.com/p/28690706
