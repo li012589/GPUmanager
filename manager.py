@@ -95,5 +95,29 @@ if check_gpus():
             index=chosen_gpu['index']
             print('Using GPU {i}:\n{info}'.format(i=index,info='\n'.join([str(k)+':'+str(v) for k,v in chosen_gpu.items()])))
             return tf.device('/gpu:{}'.format(index))
+        def give_choices(self,num=1,mode=0):
+            gpu_pack = []
+            for i in range(num):
+                pass
+                for old_infos,new_infos in zip(self.gpus,query_gpu(self.qargs)):
+                old_infos.update(new_infos)
+                unspecified_gpus=[gpu for gpu in self.gpus if not gpu['specified']] or self.gpus
+                if mode==0:
+                    print('Choosing the GPU device has largest free memory...')
+                    chosen_gpu=self._sort_by_memory(unspecified_gpus,True)[0]
+                elif mode==1:
+                    print('Choosing the GPU device has highest free memory rate...')
+                    chosen_gpu=self._sort_by_power(unspecified_gpus)[0]
+                elif mode==2:
+                    print('Choosing the GPU device by power...')
+                    chosen_gpu=self._sort_by_power(unspecified_gpus)[0]
+                else:
+                    print('Given an unaviliable mode,will be chosen by memory')
+                    chosen_gpu=self._sort_by_memory(unspecified_gpus)[0]
+                chosen_gpu['specified']=True
+                index=chosen_gpu['index']
+                gpu_pack.append(index)
+            return gpu_pack
+
 else:
     raise ImportError('GPU available check failed')
