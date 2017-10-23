@@ -45,7 +45,7 @@ if check_gpus():
             for gpu in self.gpus:
                 gpu['specified']=False
             self.gpu_num=len(self.gpus)
-            if initSession:
+            if initSession is None:
                 if sessionargs is None:
                     print("Start session using default args")
                     config = tf.ConfigProto()
@@ -55,7 +55,8 @@ if check_gpus():
                 config.gpu_options.allow_growth=True
                 self.sess = tf.Session(config=config)
             else:
-                pass
+                print("Using provided session")
+                self.sess = initSession
 
         def _sort_by_memory(self,gpus,by_size=False):
             if by_size:
