@@ -1,5 +1,5 @@
 import os
-from .utils.testCuda import check_gpus
+from utils import check_gpus
 
 class GPUManagerTemplate():
     def __init__(self,qargs=[]):
@@ -59,9 +59,6 @@ class GPUManagerTemplate():
     def give_choices(self,num=1,mode=0,slience=False):
         index = []
         for i in range(num):
-            tmp = self._auto_choice(mode=0,slience)
+            tmp = self._auto_choice(mode,slience)
             index.append(tmp)
-        return tmp
-
-else:
-    raise ImportError('GPU available check failed')
+        return index
