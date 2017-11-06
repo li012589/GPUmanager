@@ -19,5 +19,5 @@ def test_template_choices():
     print(t.give_choices(3,3))
 
 if __name__ == "__main__":
-    test_template_give()
+    #test_template_give()
     test_template_choices()
