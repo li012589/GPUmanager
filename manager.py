@@ -47,10 +47,13 @@ class GPUManagerTemplate():
             return sorted(gpus,key=key,reverse=reverse)
         raise ValueError("The argument 'key' must be a function or a key in query args,please read the documention of nvidia-smi")
 
-    def _auto_choice(self,mode=0,slience=False):
+    def _auto_choice(self,mode=0,slience=False,excludeUsed = False):
         for old_infos,new_infos in zip(self.gpus,query_gpu(self.qargs)):
             old_infos.update(new_infos)
-        unspecified_gpus=[gpu for gpu in self.gpus if not gpu['specified']] or self.gpus
+        if excludeUsed:
+            unspecified_gpus=[gpu for gpu in self.gpus if not gpu['specified']]
+        else:
+            unspecified_gpus=self.gpus
         if mode==0:
             if not slience:
                 print('Choosing the GPU device has largest free memory...')
@@ -73,6 +76,8 @@ class GPUManagerTemplate():
         print('Using GPU {i}:\n{info}'.format(i=index,info='\n'.join([str(k)+':'+str(v) for k,v in chosen_gpu.items()])))
         return index
 
+    def exclude(self,index):
+        pass
     def give(self,mode=0,slience=False):
         index = self._auto_choice(mode,slience)
         return index
