@@ -13,10 +13,14 @@ def test_template_give():
 
 def test_template_choices():
     t = GPUManagerTemplate()
-    print(t.give_choices(3,0))
-    print(t.give_choices(3,1))
-    print(t.give_choices(3,2))
-    print(t.give_choices(3,3))
+    i = [0,1]
+    t.exclude(i)
+    print(t.give(0,excludeUsed=True))
+    print(t.give_choices(0,3,excludeUsed=True))
+    t.include([5])
+    print(t.give_choices(1,3,excludeUsed=True))
+    t.include(i+[4])
+    print(t.give_choices(2,3,excludeUsed=True))
 
 if __name__ == "__main__":
     #test_template_give()

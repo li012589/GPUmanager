@@ -8,7 +8,7 @@ from manager_torch import torchGPUmanager
 
 def test_tf_auto_choice():
     t = torchGPUmanager()
-    with torchGPUmanager.choice():
+    with t.choice():
         x = torch.Tensor(8, 42)
         x = x.cuda()
         print(x)
