@@ -42,10 +42,12 @@ class GPUManagerTemplate():
             if not slience:
                 print('Choosing the GPU device by power...')
             chosen_gpu=self._sort_by_power(unspecified_gpus)[0]
-        else:
+        elif mode == 3:
             if not slience:
                 print('Given an unaviliable mode,will be chosen by memory')
             chosen_gpu=self._sort_by_memory(unspecified_gpus)[0]
+        else:
+            raise ValueError("given mode not defined!")
         chosen_gpu['specified']=True
         index=chosen_gpu['index']
         print('Using GPU {i}:\n{info}'.format(i=index,info='\n'.join([str(k)+':'+str(v) for k,v in chosen_gpu.items()])))
