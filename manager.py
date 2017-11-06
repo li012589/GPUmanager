@@ -21,7 +21,6 @@ def by_power(d):
         return 1
     return float(d['power.draw'])/d['power.limit']
 
-
 class GPUManagerTemplate():
     def __init__(self,qargs=[]):
         assert check_gpus()
@@ -31,6 +30,12 @@ class GPUManagerTemplate():
             gpu['specified']=False
         self.gpu_num=len(self.gpus)
 
+    def _if_all_specified(self):
+        remain = 0
+        for item in self.gpus:
+            if not item['specified']:
+                remain += 1
+        return remain
     def _sort_by_memory(self,gpus,by_size=False):
         if by_size:
             return sorted(gpus,key=lambda d:d['memory.free'],reverse=True)
@@ -47,7 +52,11 @@ class GPUManagerTemplate():
             return sorted(gpus,key=key,reverse=reverse)
         raise ValueError("The argument 'key' must be a function or a key in query args,please read the documention of nvidia-smi")
 
-    def _auto_choice(self,mode=0,slience=False,excludeUsed = False):
+    def _auto_choice(self,mode=0,num = 1,slience=False,excludeUsed = False):
+        remain = self._if_all_specified()
+        if remain < num:
+            raise ValueError("Not enough GPU available")
+
         for old_infos,new_infos in zip(self.gpus,query_gpu(self.qargs)):
             old_infos.update(new_infos)
         if excludeUsed:
@@ -57,33 +66,48 @@ class GPUManagerTemplate():
         if mode==0:
             if not slience:
                 print('Choosing the GPU device has largest free memory...')
-            chosen_gpu=self._sort_by_memory(unspecified_gpus,True)[0]
+            chosen_gpu=self._sort_by_memory(unspecified_gpus,True)[:num]
         elif mode==1:
             if not slience:
                 print('Choosing the GPU device has highest free memory rate...')
-            chosen_gpu=self._sort_by_power(unspecified_gpus)[0]
+            chosen_gpu=self._sort_by_power(unspecified_gpus)[:num]
         elif mode==2:
             if not slience:
                 print('Choosing the GPU device by power...')
-            chosen_gpu=self._sort_by_power(unspecified_gpus)[0]
+            chosen_gpu=self._sort_by_power(unspecified_gpus)[:num]
         else:
             if not slience:
                 print('Given an unaviliable mode,will be chosen by memory')
-            chosen_gpu=self._sort_by_memory(unspecified_gpus)[0]
+            chosen_gpu=self._sort_by_memory(unspecified_gpus)[:num]
 
-        chosen_gpu['specified']=True
-        index=chosen_gpu['index']
-        print('Using GPU {i}:\n{info}'.format(i=index,info='\n'.join([str(k)+':'+str(v) for k,v in chosen_gpu.items()])))
+        index = []
+        for item in chosen_gpu:
+            item['specified']=True
+            index.append(int(item['index']))
+            if not slience:
+                print('Using GPU {i}:\n{info}'.format(i=index,info='\n'.join([str(k)+':'+str(v) for k,v in item.items()])))
         return index
 
     def exclude(self,index):
-        pass
-    def give(self,mode=0,slience=False):
-        index = self._auto_choice(mode,slience)
+        for i in index:
+            self.gpus[i]['specified'] = True
+    def include(self,index):
+        for i in index:
+            self.gpus[i]['specified'] = False
+    def give(self,mode=0,slience=False,excludeUsed = False):
+        index = self._auto_choice(mode,1,slience,excludeUsed)
+        return index[0]
+    def give_choices(self,mode=0,num=1,slience=True,excludeUsed=False):
+        index = self._auto_choice(mode,num,slience,excludeUsed)
         return index
-    def give_choices(self,num=1,mode=0,slience=False):
-        index = []
-        for i in range(num):
-            tmp = self._auto_choice(mode,slience)
-            index.append(tmp)
-        return index
+
+if __name__ == "__main__":
+    t = GPUManagerTemplate()
+    i = [0,1]
+    t.exclude(i)
+    print(t.give(0,excludeUsed=True))
+    print(t.give_choices(0,3,excludeUsed=True))
+    t.include([5])
+    print(t.give_choices(3,3,excludeUsed=True))
+    t.include(i+[4])
+    print(t.give_choices(3,3,excludeUsed=True))
