@@ -2,7 +2,7 @@ import os
 from .utils.testCuda import check_gpus
 
 class GPUManagerTemplate():
-    def __init__(self,qargs=[],sessionargs=None):
+    def __init__(self,qargs=[]):
         assert check_gpus()
         self.qargs=qargs
         self.gpus=query_gpu(qargs)
@@ -50,9 +50,10 @@ class GPUManagerTemplate():
         index=chosen_gpu['index']
         print('Using GPU {i}:\n{info}'.format(i=index,info='\n'.join([str(k)+':'+str(v) for k,v in chosen_gpu.items()])))
         return index
-    def auto_choice(self,mode=0,slience=False):
-        indec = self._auto_choice(mode,slience)
-        return tf.device('/gpu:{}'.format(index))
+
+    def give(self,mode=0,slience=False):
+        index = self._auto_choice(mode,slience)
+        return index
     def give_choices(self,num=1,mode=0,slience=False):
         index = []
         for i in range(num):
