@@ -1,5 +1,5 @@
 import os
-from utils import check_gpus
+from .utils import check_gpus
 
 def parse(line,qargs):
     numberic_args = ['memory.free', 'memory.total', 'power.draw', 'power.limit']

@@ -1,4 +1,4 @@
-from  manager import GPUManagerTemplate
+from .manager import GPUManagerTemplate
 
 import torch
 
