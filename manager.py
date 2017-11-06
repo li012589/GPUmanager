@@ -1,6 +1,27 @@
 import os
 from utils import check_gpus
 
+def parse(line,qargs):
+    numberic_args = ['memory.free', 'memory.total', 'power.draw', 'power.limit']
+    power_manage_enable=lambda v:(not 'Not Support' in v)
+    to_numberic=lambda v:float(v.upper().strip().replace('MIB','').replace('W',''))
+    process = lambda k,v:((int(to_numberic(v)) if power_manage_enable(v) else 1) if k in numberic_args else v.strip())
+    return {k:process(k,v) for k,v in zip(qargs,line.strip().split(','))}
+
+def query_gpu(qargs=[]):
+    qargs =['index','gpu_name', 'memory.free', 'memory.total', 'power.draw', 'power.limit']+ qargs
+    cmd = 'nvidia-smi --query-gpu={} --format=csv,noheader'.format(','.join(qargs))
+    results = os.popen(cmd).readlines()
+    return [parse(line,qargs) for line in results]
+
+def by_power(d):
+    power_infos=(d['power.draw'],d['power.limit'])
+    if any(v==1 for v in power_infos):
+        print('Power management unable for GPU {}'.format(d['index']))
+        return 1
+    return float(d['power.draw'])/d['power.limit']
+
+
 class GPUManagerTemplate():
     def __init__(self,qargs=[]):
         assert check_gpus()
