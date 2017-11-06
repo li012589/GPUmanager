@@ -1,10 +1,10 @@
-from  manager import GPUmanager
+from  manager import GPUManagerTemplate
 
 import torch
 
-class torchGPUmanager(GPUmanager):
+class torchGPUmanager(GPUManagerTemplate):
     def __init__(self,qargs=[]):
-        super(tfGPUmanager,self).__init__(qargs):
-    def choice(self,mode=0,slience=False):
-        index = self._auto_choice(mode,slience)
+        super(torchGPUmanager,self).__init__(qargs)
+    def choice(self,mode=0,slience=False,excludeUsed = False):
+        index = self.give(mode,slience,excludeUsed)
         return torch.cuda.device(index)
