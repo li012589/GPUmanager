@@ -16,7 +16,7 @@ There 3 rules to select GPU (specified by calling `auto_choice(mode_code)`):
 
 ## How to run 
 
-### Briefly
+### Brief
 
 1. First copy *GPUmanager* folder to your work folder;
 2. import `tfGPUmanager` or `torchGPUmanager` according to your code;
@@ -46,8 +46,8 @@ import torch
 ...
 gm = torchGPUmanager()
 ...
-with gm.choice():
-  ...
+CPU = gm.choice():
+XXXX.cuda(GPU)
 ...
 ```
 
