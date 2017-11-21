@@ -22,7 +22,8 @@ There 3 rules to select GPU (specified by calling `auto_choice(mode_code)`):
 2. import `tfGPUmanager` or `torchGPUmanager` according to your code;
 3. Initialize GPUManager using `gm = tfGPUManager()` or `gm = torchGPUManager()`;
 4. (For tensorflow,) Use `gm.sess` as your tensorflow session; Before your `sess.run` add `with gm.choice():`;
-5. (For pytorch,) Just use `with gm.choice():` before your code.
+5. (For tensorflow,) Use `with gm.choice():` before your code.
+6. (For pytorch,) Use the GPU number `gm.choice()` gives you.
 
 It looks like this (for tensorflow):
 
